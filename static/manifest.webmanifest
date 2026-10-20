@@ -1,0 +1,20 @@
+{
+  "name": "키 체인저",
+  "short_name": "키 체인저",
+  "description": "유튜브 영상의 키(음정)를 바꿔서 듣기",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "icons": [
+    { "src": "/static/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/static/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "/",
+    "method": "GET",
+    "params": { "url": "url", "text": "text" }
+  }
+}

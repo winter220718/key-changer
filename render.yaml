@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: key-changer
+    runtime: docker
+    plan: free
+    healthCheckPath: /

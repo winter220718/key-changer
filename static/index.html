@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>키 체인저</title>
+<meta name="theme-color" content="#0f1115">
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="icon" href="/static/icons/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main>
+  <h1>키 체인저</h1>
+
+  <form id="form">
+    <input id="url" type="url" inputmode="url" placeholder="유튜브 링크를 붙여넣으세요" autocomplete="off" required>
+    <button id="load" type="submit">불러오기</button>
+  </form>
+  <p id="msg" role="status"></p>
+
+  <section id="player" hidden>
+    <img id="thumb" alt="">
+    <div class="meta">
+      <div id="title"></div>
+      <div id="channel"></div>
+    </div>
+
+    <div class="seek">
+      <span id="cur">0:00</span>
+      <input id="seek" type="range" min="0" max="0" step="0.1" value="0">
+      <span id="dur">0:00</span>
+    </div>
+
+    <div class="transport">
+      <button id="back" aria-label="10초 뒤로">⏪ 10</button>
+      <button id="play" class="primary" aria-label="재생">▶</button>
+      <button id="fwd" aria-label="10초 앞으로">10 ⏩</button>
+    </div>
+
+    <div class="key">
+      <div class="label">키 <b id="keyVal">0</b></div>
+      <div class="row">
+        <button id="keyDown" aria-label="키 내리기">−</button>
+        <input id="key" type="range" min="-12" max="12" step="1" value="0">
+        <button id="keyUp" aria-label="키 올리기">+</button>
+      </div>
+      <button id="keyReset" class="ghost">키 초기화</button>
+    </div>
+
+    <div class="speed">
+      <div class="label">속도 <b id="speedVal">1.00x</b></div>
+      <input id="speed" type="range" min="0.5" max="2" step="0.05" value="1">
+    </div>
+  </section>
+
+  <footer>개인 사용 목적의 도구입니다. 저작권과 유튜브 약관은 사용자 책임입니다.</footer>
+</main>
+<script src="/static/vendor/Tone.js"></script>
+<script src="/static/app.js"></script>
+</body>
+</html>
