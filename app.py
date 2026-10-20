@@ -1,3 +1,4 @@
+import logging
 import re
 import time
 from pathlib import Path
@@ -15,6 +16,7 @@ CACHE_TTL = 30 * 60  # 스트림 URL은 수 시간 유효하지만 여유있게 
 ID_RE = re.compile(r"^[A-Za-z0-9_-]{11}$")
 YT_HOSTS = {"youtube.com", "www.youtube.com", "m.youtube.com", "music.youtube.com", "youtu.be"}
 
+log = logging.getLogger("uvicorn.error")
 app = FastAPI()
 _cache: dict[str, tuple[float, dict]] = {}
 
@@ -80,17 +82,26 @@ def info(url: str):
 async def audio(vid: str, request: Request):
     if not ID_RE.match(vid):
         raise HTTPException(400, "잘못된 ID")
-    d = resolve(vid)
-    headers = dict(d["headers"])
-    if "range" in request.headers:
-        headers["Range"] = request.headers["range"]
-
     client = httpx.AsyncClient(timeout=httpx.Timeout(15, read=60), follow_redirects=True)
-    upstream = await client.send(client.build_request("GET", d["stream_url"], headers=headers), stream=True)
-    if upstream.status_code >= 400:
-        await upstream.aclose()
+    upstream = None
+    for attempt in range(2):
+        d = resolve(vid)
+        headers = dict(d["headers"])
+        headers["Range"] = request.headers.get("range", "bytes=0-")
+        try:
+            upstream = await client.send(client.build_request("GET", d["stream_url"], headers=headers), stream=True)
+        except httpx.HTTPError as e:
+            log.warning("audio %s attempt %d: %s", vid, attempt, type(e).__name__)
+            upstream = None
+        else:
+            if upstream.status_code < 400:
+                break
+            log.warning("audio %s attempt %d: upstream %s", vid, attempt, upstream.status_code)
+            await upstream.aclose()
+            upstream = None
+        _cache.pop(vid, None)  # 만료/차단된 URL일 수 있으니 새로 추출해서 재시도
+    if upstream is None:
         await client.aclose()
-        _cache.pop(vid, None)  # 만료된 URL일 수 있으니 다음 요청에서 재추출
         raise HTTPException(502, "오디오 스트림을 가져오지 못했습니다.")
 
     async def body():
