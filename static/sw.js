@@ -1,9 +1,10 @@
-const CACHE = "keychanger-v1";
+const CACHE = "keychanger-v2";
 const SHELL = [
   "/",
   "/static/style.css",
   "/static/app.js",
-  "/static/vendor/Tone.js",
+  "/static/vendor/soundtouch-node.js",
+  "/static/vendor/soundtouch-processor.js",
   "/static/manifest.webmanifest",
   "/static/icons/icon-192.png",
   "/static/icons/icon-512.png",

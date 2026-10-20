@@ -1,10 +1,13 @@
+import { SoundTouchNode } from "/static/vendor/soundtouch-node.js";
+
 const $ = (id) => document.getElementById(id);
 const audio = new Audio();
 audio.preload = "auto";
-audio.preservesPitch = true;
+// 속도는 요소의 playbackRate로 바꾸고, 피치 보정은 SoundTouch가 맡는다 (브라우저 자체 보정은 끈다)
+audio.preservesPitch = false;
 
-let graphReady = false;
-let pitchNode = null;
+let graphPromise = null;
+let st = null;
 let seeking = false;
 
 function fmt(s) {
@@ -20,29 +23,36 @@ function setMsg(text, err = false) {
 }
 
 // Web Audio 그래프는 사용자 제스처 이후 한 번만 만든다 (모바일 autoplay 정책)
-async function ensureGraph() {
-  if (graphReady) return;
-  await Tone.start();
-  const ctx = Tone.getContext().rawContext;
-  const src = ctx.createMediaElementSource(audio);
-  pitchNode = new Tone.PitchShift({ pitch: 0, windowSize: 0.1 }).toDestination();
-  Tone.connect(src, pitchNode);
-  graphReady = true;
-  applyKey();
+function ensureGraph() {
+  if (!graphPromise) {
+    graphPromise = (async () => {
+      const ctx = new AudioContext();
+      await ctx.resume();
+      await SoundTouchNode.register(ctx, "/static/vendor/soundtouch-processor.js");
+      st = new SoundTouchNode({ context: ctx });
+      ctx.createMediaElementSource(audio).connect(st);
+      st.connect(ctx.destination);
+      applyKey();
+      applySpeed();
+    })().catch((e) => {
+      graphPromise = null; // 실패하면 다음 재생 때 다시 시도
+      throw e;
+    });
+  }
+  return graphPromise;
 }
 
 function applyKey() {
   const k = Number($("key").value);
   $("keyVal").textContent = (k > 0 ? "+" : "") + k;
-  if (!pitchNode) return;
-  pitchNode.pitch = k;
-  pitchNode.wet.value = k === 0 ? 0 : 1; // 0이면 원음 그대로
+  if (st) st.pitchSemitones.value = k;
 }
 
 function applySpeed() {
   const v = Number($("speed").value);
   audio.playbackRate = v;
   $("speedVal").textContent = v.toFixed(2) + "x";
+  if (st) st.playbackRate.value = v; // 소스 속도를 알려주면 피치를 자동 보정한다
 }
 
 function setKey(v) {
@@ -84,7 +94,12 @@ async function load(url) {
 }
 
 async function togglePlay() {
-  await ensureGraph();
+  try {
+    await ensureGraph();
+  } catch (e) {
+    setMsg("오디오 엔진을 시작하지 못했습니다(HTTPS 또는 localhost 필요): " + e.message, true);
+    return;
+  }
   if (audio.paused) {
     try { await audio.play(); } catch (e) { setMsg("재생할 수 없습니다: " + e.message, true); }
   } else {

@@ -1,7 +1,7 @@
 # 키 체인저
 
 유튜브 링크를 넣으면 키(음정)와 속도를 바꿔서 들을 수 있는 PWA.
-FastAPI + yt-dlp가 오디오 스트림을 중계하고, 브라우저(Tone.js)가 실시간으로 피치를 변환한다.
+FastAPI + yt-dlp가 오디오 스트림을 중계하고, 브라우저(SoundTouch AudioWorklet)가 실시간으로 피치를 변환한다.
 
 ## 로컬 실행
     python -m venv .venv
